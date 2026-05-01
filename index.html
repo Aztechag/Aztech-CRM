@@ -351,7 +351,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // ══════════════════════════════════════════════
 // 🔧 PASTE YOUR SUPABASE CREDENTIALS HERE
 // ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://pkagsqishhzjniujlybz.supabase.co';
+const SUPABASE_URL = 'https://pkagsqishhzjniujlybz.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_publishable_sKXC-Qltg1QPFBxmL34KEg_r1ax8zlL';
 // ══════════════════════════════════════════════
 
@@ -416,11 +416,22 @@ window.doSignOut = async function() {
 
 // ── Data ──
 async function loadContacts() {
+  console.log('Loading contacts...');
   const { data, error } = await supabase
     .from('contacts')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) { showToast('Error loading contacts'); console.error(error); return; }
+    .select('*');
+  if (error) {
+    console.error('Supabase error:', JSON.stringify(error));
+    showToast('Error: ' + (error.message || 'Could not load contacts'));
+    // Clear spinners so page doesn't hang
+    ['dash-recent','dash-followups','contacts-table-wrap','leads-table-wrap','fu-table-wrap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<div class="empty"><div class="empty-text">Could not load data</div><div class="empty-sub">${error.message}</div></div>`;
+    });
+    document.getElementById('pipeline-board').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">Could not load data: ${error.message}</div>`;
+    return;
+  }
+  console.log('Contacts loaded:', data?.length, data);
   contacts = data || [];
   refreshAll();
 }
