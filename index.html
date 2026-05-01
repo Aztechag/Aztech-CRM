@@ -346,7 +346,7 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
 
 // ══════════════════════════════════════════════
 // 🔧 PASTE YOUR SUPABASE CREDENTIALS HERE
@@ -417,23 +417,31 @@ window.doSignOut = async function() {
 // ── Data ──
 async function loadContacts() {
   console.log('Loading contacts...');
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('*');
-  if (error) {
-    console.error('Supabase error:', JSON.stringify(error));
-    showToast('Error: ' + (error.message || 'Could not load contacts'));
-    // Clear spinners so page doesn't hang
+  try {
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*');
+    if (error) {
+      console.error('Supabase error:', JSON.stringify(error));
+      showToast('Error: ' + (error.message || 'Could not load contacts'));
+      ['dash-recent','dash-followups','contacts-table-wrap','leads-table-wrap','fu-table-wrap'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = `<div class="empty"><div class="empty-text">Could not load data</div><div class="empty-sub">${error.message}</div></div>`;
+      });
+      document.getElementById('pipeline-board').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">Could not load data: ${error.message}</div>`;
+      return;
+    }
+    console.log('Contacts loaded:', data?.length, data);
+    contacts = data || [];
+    refreshAll();
+  } catch(err) {
+    console.error('loadContacts exception:', err);
+    showToast('Connection error — check console');
     ['dash-recent','dash-followups','contacts-table-wrap','leads-table-wrap','fu-table-wrap'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = `<div class="empty"><div class="empty-text">Could not load data</div><div class="empty-sub">${error.message}</div></div>`;
+      if (el) el.innerHTML = `<div class="empty"><div class="empty-text">Connection error</div><div class="empty-sub">${err.message}</div></div>`;
     });
-    document.getElementById('pipeline-board').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray-400)">Could not load data: ${error.message}</div>`;
-    return;
   }
-  console.log('Contacts loaded:', data?.length, data);
-  contacts = data || [];
-  refreshAll();
 }
 
 function subscribeContacts() {
