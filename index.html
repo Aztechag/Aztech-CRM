@@ -443,10 +443,27 @@ function subscribeContacts() {
 }
 
 function refreshAll() {
-  updateBadges(); updateStats();
-  renderDashboard(); renderContactsTable();
-  renderLeadsTable(); renderPipeline(); renderFollowupsTable();
-  if (detailId) openDetail(detailId);
+  try { updateBadges(); } catch(e) { console.error('badges err', e); }
+  try { updateStats(); } catch(e) { console.error('stats err', e); }
+  try { renderDashboard(); } catch(e) {
+    console.error('dashboard err', e);
+    document.getElementById('dash-recent').innerHTML = emptyState('Display error: ' + e.message);
+    document.getElementById('dash-followups').innerHTML = emptyState('Display error: ' + e.message);
+  }
+  try { renderContactsTable(); } catch(e) {
+    console.error('contacts err', e);
+    document.getElementById('contacts-table-wrap').innerHTML = emptyState('Display error: ' + e.message);
+  }
+  try { renderLeadsTable(); } catch(e) {
+    console.error('leads err', e);
+    document.getElementById('leads-table-wrap').innerHTML = emptyState('Display error: ' + e.message);
+  }
+  try { renderPipeline(); } catch(e) { console.error('pipeline err', e); }
+  try { renderFollowupsTable(); } catch(e) {
+    console.error('followups err', e);
+    document.getElementById('fu-table-wrap').innerHTML = emptyState('Display error: ' + e.message);
+  }
+  if (detailId) try { openDetail(detailId); } catch(e) {}
 }
 
 // ── Helpers ──
